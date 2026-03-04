@@ -5,6 +5,7 @@ import { DailyService } from './daily.service';
 import { Daily } from './entities/daily.entity';
 import { AiService } from '../ai/ai.service';
 import { AsanaService } from '../asana/asana.service';
+import type { AsanaTask } from '../asana/asana.service';
 import { User } from '../users/entities/user.entity';
 
 const mockFetch = jest.fn();
@@ -82,7 +83,7 @@ describe('DailyService', () => {
       mockRepo.create.mockReturnValue(saved);
       mockRepo.save.mockResolvedValue(saved);
 
-      const dto = { selectedTasks: [], workedOnYesterdayTasks: [], date: '2024-03-01' };
+      const dto = { selectedTasks: [] as AsanaTask[], workedOnYesterdayTasks: [] as AsanaTask[], date: '2024-03-01' };
       const result = await service.generate(user, dto as any);
 
       expect(mockAsanaService.enrichTasksWithComments).toHaveBeenCalledTimes(2);

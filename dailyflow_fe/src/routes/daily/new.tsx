@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import api from '@/lib/api';
 import { AsanaTasksResponse, Daily } from '@/types/api';
 import { toast } from 'sonner';
@@ -74,16 +74,22 @@ function NewDaily() {
     },
   });
 
+  const mutationInitiatedRef = useRef(false);
+  const mutateRef = useRef(mutation.mutate);
+  mutateRef.current = mutation.mutate;
+
   useEffect(() => {
     if (selectedTaskIds.length === 0) {
-      navigate({ to: '/dashboard' });
+      if (!mutationInitiatedRef.current) {
+        void navigate({ to: '/dashboard' });
+      }
       return;
     }
-    if (tasksData && !mutation.isPending && !mutation.isSuccess) {
-      mutation.mutate();
+    if (tasksData && !mutationInitiatedRef.current) {
+      mutationInitiatedRef.current = true;
+      mutateRef.current();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasksData]);
+  }, [tasksData, navigate, selectedTaskIds.length]);
 
   return (
     <div className="min-h-screen bg-background">

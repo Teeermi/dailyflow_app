@@ -35,8 +35,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Asana OAuth2 callback — sets JWT cookie and redirects to dashboard' })
   @ApiResponse({ status: 302, description: 'Redirect to frontend dashboard' })
   @UseGuards(AuthGuard('asana'))
-  asanaCallback(@Req() req: any, @Res() res: Response) {
-    const user: User = req.user;
+  asanaCallback(@Req() req: Request & { user: User }, @Res() res: Response) {
+    const user = req.user;
     const token = this.authService.generateJwt(user);
     const frontendUrl = this.configService.get<string>('FRONTEND_URL');
 

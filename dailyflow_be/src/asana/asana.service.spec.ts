@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
-import { AsanaService } from './asana.service';
+import { AsanaService, AsanaTask } from './asana.service';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
 
@@ -26,7 +26,7 @@ const baseUser: User = {
 const makeWorkspaceResponse = () =>
   Promise.resolve({ ok: true, json: () => Promise.resolve({ data: [{ gid: 'ws-1' }] }) });
 
-const makeTasksResponse = (tasks: any[]) =>
+const makeTasksResponse = (tasks: AsanaTask[]) =>
   Promise.resolve({ ok: true, json: () => Promise.resolve({ data: tasks }) });
 
 const makeStoriesResponse = (stories: any[]) =>
@@ -77,7 +77,6 @@ describe('AsanaService', () => {
 
       await service.getTasks(baseUser);
 
-      // fetch called for workspace + 2 task queries, NOT for token refresh
       const tokenRefreshCall = mockFetch.mock.calls.find(
         (c) => c[0] === 'https://app.asana.com/-/oauth_token',
       );
@@ -143,9 +142,9 @@ describe('AsanaService', () => {
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-      const completedTask = { gid: 't1', name: 'Done task', completed: true, notes: '', completed_at: `${yesterdayStr}T10:00:00`, modified_at: `${yesterdayStr}T10:00:00`, due_on: null, projects: [] };
-      const activeTask = { gid: 't2', name: 'Active task', completed: false, notes: '', completed_at: null, modified_at: null, due_on: null, projects: [] };
-      const inProgressTask = { gid: 't3', name: 'In progress task', completed: false, notes: '', completed_at: null, modified_at: `${yesterdayStr}T15:00:00`, due_on: null, projects: [] };
+      const completedTask: AsanaTask = { gid: 't1', name: 'Done task', completed: true, notes: '', completed_at: `${yesterdayStr}T10:00:00`, modified_at: `${yesterdayStr}T10:00:00`, due_on: null, projects: [] };
+      const activeTask: AsanaTask = { gid: 't2', name: 'Active task', completed: false, notes: '', completed_at: null, modified_at: null, due_on: null, projects: [] };
+      const inProgressTask: AsanaTask = { gid: 't3', name: 'In progress task', completed: false, notes: '', completed_at: null, modified_at: `${yesterdayStr}T15:00:00`, due_on: null, projects: [] };
 
       mockFetch
         .mockResolvedValueOnce(makeWorkspaceResponse())
@@ -166,7 +165,7 @@ describe('AsanaService', () => {
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-      const sharedTask = { gid: 't1', name: 'Shared task', completed: false, notes: '', completed_at: null, modified_at: `${yesterdayStr}T09:00:00`, due_on: null, projects: [] };
+      const sharedTask: AsanaTask = { gid: 't1', name: 'Shared task', completed: false, notes: '', completed_at: null, modified_at: `${yesterdayStr}T09:00:00`, due_on: null, projects: [] };
 
       mockFetch
         .mockResolvedValueOnce(makeWorkspaceResponse())
@@ -196,7 +195,7 @@ describe('AsanaService', () => {
   });
 
   describe('enrichTasksWithComments', () => {
-    const baseTask = {
+    const baseTask: AsanaTask = {
       gid: 't1',
       name: 'DLY-1005',
       notes: '',

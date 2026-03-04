@@ -1,6 +1,7 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from '@tanstack/react-form';
+import type { AxiosError } from 'axios';
 import api from '@/lib/api';
 import { Daily, User } from '@/types/api';
 import { locales } from '@/lib/locales';
@@ -47,8 +48,8 @@ function DailyView() {
   const slackMutation = useMutation({
     mutationFn: () => api.post(`/daily/${dailyId}/post-to-slack`),
     onSuccess: () => toast.success(locales.dailyDetail.toast.slackSuccess),
-    onError: (err: any) => {
-      const msg = err?.response?.data?.message ?? locales.dailyDetail.toast.slackError;
+    onError: (err: AxiosError<{ message?: string }>) => {
+      const msg = err.response?.data?.message ?? locales.dailyDetail.toast.slackError;
       toast.error(msg);
     },
   });

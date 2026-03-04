@@ -27,6 +27,10 @@ RUN npm ci --omit=dev
 COPY entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001 -G nodejs
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
 EXPOSE 3000
 
 ENTRYPOINT ["./entrypoint.sh"]

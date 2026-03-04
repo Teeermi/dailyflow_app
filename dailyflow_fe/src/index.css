@@ -59,3 +59,15 @@
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
 }
+
+@layer components {
+  .asana-btn {
+    box-shadow: 0 0 40px 8px rgba(134, 19, 53, 0.6), 0 0 80px 20px rgba(134, 19, 53, 0.3);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+  }
+  .asana-btn:hover {
+    box-shadow: 0 0 60px 16px rgba(134, 19, 53, 0.8), 0 0 120px 40px rgba(134, 19, 53, 0.4);
+    transform: scale(1.03);
+  }
+}
+

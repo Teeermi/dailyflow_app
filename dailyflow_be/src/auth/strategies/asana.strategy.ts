@@ -3,6 +3,12 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-oauth2';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../../users/users.service';
+import { User } from '../../users/entities/user.entity';
+
+interface AsanaOAuthParams {
+  expires_in?: number;
+  token_type?: string;
+}
 
 @Injectable()
 export class AsanaStrategy extends PassportStrategy(Strategy, 'asana') {
@@ -23,8 +29,8 @@ export class AsanaStrategy extends PassportStrategy(Strategy, 'asana') {
   async validate(
     accessToken: string,
     refreshToken: string,
-    params: any,
-  ): Promise<any> {
+    params: AsanaOAuthParams,
+  ): Promise<User> {
     const expiresIn: number = params?.expires_in;
     const tokenExpiresAt = expiresIn
       ? new Date(Date.now() + expiresIn * 1000)

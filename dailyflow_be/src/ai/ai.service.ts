@@ -48,36 +48,40 @@ export class AiService {
         ? todayTasks.map(formatTask).join('\n')
         : '(none)';
 
-    const prompt = `You are an engineering standup assistant. Generate a concise, professional daily standup update for ${date}.
+    const systemPrompt = `You are an engineering standup assistant. Your sole job is to write a short daily standup update.
+
+Output ONLY the standup update — three sections, nothing else before or after:
+**Yesterday** — summarise completed tasks as finished; in-progress tasks as worked on; if both lists are empty write "No work logged yesterday"
+**Today** — what will be worked on based on the active today list; if empty write "No tasks planned"
+**Blockers** — any impediments, or "None"
+
+Rules:
+- First person (I did / I will / I worked on)
+- For in-progress tasks use "I worked on X" or "I made progress on X", never "I completed X"
+- If a task name looks like a ticket ID (e.g. DLY-123), use its description instead
+- Use comments to judge status: unresolved issues → blockers; confirmed-fixed issues → resolved
+- 1–2 sentences per section, concise and professional
+- No task IDs, GIDs, or raw field names
+- No preamble, no closing remarks, no repetition of the input data`;
+
+    const userPrompt = `Generate a standup for ${date}.
 
 COMPLETED YESTERDAY:
 ${completedSection}
 
-IN PROGRESS YESTERDAY (started but not finished):
+IN PROGRESS YESTERDAY:
 ${workedOnSection}
 
 ACTIVE TODAY:
-${todaySection}
-
-Write a standup update with exactly three sections:
-1. **Yesterday** — summarise what was done: mention completed tasks as finished, and in-progress tasks as worked on; if both lists are empty say "No work logged yesterday"
-2. **Today** — describe what will be worked on based ONLY on the active today list; if empty say "No tasks planned"
-3. **Blockers** — any blockers or impediments (write "None" if there are no obvious blockers)
-
-Rules:
-- Write in first person (I did / I will / I worked on)
-- If a task has a descriptive name, refer to it by that name; if the name looks like a ticket/ID code (e.g. "DLY-1005", "PROJ-123"), use the Description field to explain what the task is about — do not just repeat the raw ID in the output
-- If a task has a Comments section, use it to understand the current state: if a tester raised issues and a developer confirmed they are fixed, treat those sub-items as resolved; if issues were raised but not yet acknowledged or resolved, surface them as open items or blockers
-- For in-progress tasks use phrasing like "I worked on X" or "I made progress on X", NOT "I completed X"
-- Be concise and professional (1–2 sentences per section)
-- Do not include task IDs, GIDs, or raw field names
-- Plain text only, use the bold section headers shown above
-- Do not add any preamble or closing remarks`;
+${todaySection}`;
 
     try {
       const response = await this.ollama.chat({
         model: this.model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
         stream: false,
       });
       return response.message.content;

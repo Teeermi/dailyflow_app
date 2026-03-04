@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { InternalServerErrorException } from '@nestjs/common';
 import { AiService } from './ai.service';
+import type { AsanaTask } from '../asana/asana.service';
 
 const mockChat = jest.fn();
 
@@ -9,7 +10,7 @@ jest.mock('ollama', () => ({
   Ollama: jest.fn().mockImplementation(() => ({ chat: mockChat })),
 }));
 
-const makeTasks = () => [
+const makeTasks = (): AsanaTask[] => [
   {
     gid: '1',
     name: 'Fix login bug',
@@ -79,7 +80,7 @@ describe('AiService', () => {
       message: { content: '**Yesterday**\nWorked on X.\n\n**Today**\n(none)\n\n**Blockers**\nNone' },
     });
 
-    const inProgressTask = {
+    const inProgressTask: AsanaTask = {
       gid: '3',
       name: 'Refactor auth module',
       notes: '',

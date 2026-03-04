@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/entities/user.entity';
@@ -26,9 +26,21 @@ export interface AsanaProject {
   name: string;
 }
 
+interface AsanaStoryRaw {
+  type: string;
+  text?: string;
+  created_at: string;
+  created_by?: { name?: string };
+}
+
 @Injectable()
 export class AsanaService {
   private readonly asanaBase = 'https://app.asana.com/api/1.0';
+  private readonly logger = new Logger(AsanaService.name);
+
+  private readonly TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000;
+  private readonly COMMENT_LIMIT = 15;
+  private readonly COMMENT_TEXT_MAX_LENGTH = 300;
 
   constructor(
     private readonly configService: ConfigService,
@@ -36,10 +48,9 @@ export class AsanaService {
   ) {}
 
   private async ensureFreshToken(user: User): Promise<string> {
-    const fiveMinutes = 5 * 60 * 1000;
     const isExpiredOrExpiringSoon =
       !user.tokenExpiresAt ||
-      user.tokenExpiresAt.getTime() - Date.now() < fiveMinutes;
+      user.tokenExpiresAt.getTime() - Date.now() < this.TOKEN_EXPIRY_BUFFER_MS;
 
     if (!isExpiredOrExpiringSoon) return user.accessToken;
     if (!user.refreshToken) {
@@ -76,7 +87,7 @@ export class AsanaService {
     return data.access_token;
   }
 
-  private async asanaGet(path: string, token: string): Promise<any> {
+  private async asanaGet<T>(path: string, token: string): Promise<T> {
     const res = await fetch(`${this.asanaBase}${path}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -91,7 +102,7 @@ export class AsanaService {
   }
 
   private async getWorkspaceGid(token: string): Promise<string> {
-    const workspaces = await this.asanaGet('/workspaces', token);
+    const workspaces = await this.asanaGet<{ gid: string }[]>('/workspaces', token);
     if (!workspaces || workspaces.length === 0) {
       throw new Error('No Asana workspaces found');
     }
@@ -101,11 +112,11 @@ export class AsanaService {
   async getProjects(user: User): Promise<AsanaProject[]> {
     const token = await this.ensureFreshToken(user);
     const workspaceGid = await this.getWorkspaceGid(token);
-    const projects = await this.asanaGet(
+    const projects = await this.asanaGet<AsanaProject[]>(
       `/projects?workspace=${workspaceGid}&archived=false&opt_fields=gid,name`,
       token,
     );
-    return (projects || []) as AsanaProject[];
+    return projects ?? [];
   }
 
   async getTasks(
@@ -126,17 +137,15 @@ export class AsanaService {
     const optFields = 'gid,name,notes,completed,completed_at,modified_at,due_on,projects.name';
     const projectFilter = projectGid ? `&projects=${projectGid}` : '';
 
-    // Query 1: completed_since returns all incomplete tasks + recently completed.
-    // Query 2: modified_since + completed=false gives us tasks worked on recently.
     const [recentTasks, modifiedTasks] = await Promise.all([
-      this.asanaGet(
+      this.asanaGet<AsanaTask[]>(
         `/tasks?assignee=me&workspace=${workspaceGid}&completed_since=${yesterdayStr}T00:00:00&opt_fields=${optFields}${projectFilter}`,
         token,
-      ) as Promise<AsanaTask[]>,
-      this.asanaGet(
+      ),
+      this.asanaGet<AsanaTask[]>(
         `/tasks?assignee=me&workspace=${workspaceGid}&completed=false&modified_since=${yesterdayStr}T00:00:00&opt_fields=${optFields}${projectFilter}`,
         token,
-      ) as Promise<AsanaTask[]>,
+      ),
     ]);
 
     const safeRecent: AsanaTask[] = recentTasks ?? [];
@@ -147,14 +156,12 @@ export class AsanaService {
         t.completed &&
         t.completed_at &&
         (
-          // Completed within yesterday's window
           (t.completed_at >= `${yesterdayStr}T00:00:00` && t.completed_at < `${todayStr}T00:00:00`) ||
-          // Or completed today but was due yesterday (finished late)
+          // completed today but due yesterday = late finish
           (t.completed_at >= `${todayStr}T00:00:00` && t.due_on === yesterdayStr)
         ),
     );
 
-    // Incomplete tasks whose last modification fell within yesterday.
     const workedOnYesterday = safeModified.filter(
       (t) =>
         t.modified_at &&
@@ -162,31 +169,37 @@ export class AsanaService {
         t.modified_at < `${todayStr}T00:00:00`,
     );
 
-    const workedOnYesterdayGids = new Set(workedOnYesterday.map((t) => t.gid));
+    const completedYesterdayGids = new Set(completedYesterday.map((t) => t.gid));
 
-    // Active today = incomplete tasks NOT already in workedOnYesterday.
+    const workedOnYesterdayDeduped = workedOnYesterday.filter(
+      (t) => !completedYesterdayGids.has(t.gid),
+    );
+
+    const workedOnYesterdayGids = new Set(workedOnYesterdayDeduped.map((t) => t.gid));
+
     const activeToday = safeRecent.filter(
       (t) => !t.completed && !workedOnYesterdayGids.has(t.gid),
     );
 
-    return { yesterday: completedYesterday, workedOnYesterday, today: activeToday };
+    return { yesterday: completedYesterday, workedOnYesterday: workedOnYesterdayDeduped, today: activeToday };
   }
 
   private async fetchTaskComments(token: string, taskGid: string): Promise<AsanaComment[]> {
     try {
-      const stories = await this.asanaGet(
+      const stories = await this.asanaGet<AsanaStoryRaw[]>(
         `/tasks/${taskGid}/stories?opt_fields=text,created_by.name,created_at,type`,
         token,
       );
-      return (stories || [])
-        .filter((s: any) => s.type === 'comment' && s.text)
-        .slice(-15)
-        .map((s: any) => ({
+      return (stories ?? [])
+        .filter((s: AsanaStoryRaw) => s.type === 'comment' && s.text)
+        .slice(-this.COMMENT_LIMIT)
+        .map((s: AsanaStoryRaw) => ({
           author: s.created_by?.name ?? 'Unknown',
-          text: s.text.slice(0, 300),
+          text: (s.text ?? '').slice(0, this.COMMENT_TEXT_MAX_LENGTH),
           created_at: s.created_at,
         }));
-    } catch {
+    } catch (err: unknown) {
+      this.logger.warn(`Failed to fetch comments for task ${taskGid}: ${String(err)}`);
       return [];
     }
   }

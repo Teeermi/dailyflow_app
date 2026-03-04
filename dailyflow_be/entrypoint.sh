@@ -2,7 +2,7 @@
 set -e
 
 echo "Waiting for MySQL at ${DB_HOST}:${DB_PORT}..."
-until mariadb-admin ping -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASS}" --ssl=FALSE --silent 2>/dev/null; do
+until mysqladmin ping -h"${DB_HOST}" -P"${DB_PORT}" -u"${DB_USER}" -p"${DB_PASS}" --ssl=FALSE --silent 2>/dev/null; do
   sleep 2
 done
 echo "MySQL is ready."
