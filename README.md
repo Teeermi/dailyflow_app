@@ -147,11 +147,11 @@ Swagger UI is available at `http://localhost:3000/api/docs` when the server is r
 
 | Landing | Dashboard (light) | Dashboard (dark) |
 |---------|-------------------|------------------|
-| ![Landing](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.01.28.png) | ![Dashboard light](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.03.07.png) | ![Dashboard dark](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.02.10.png) |
+| ![Landing](showcase/Zrzut%20ekranu%202026-03-4%20o%2008.48.07.png) | ![Dashboard light](showcase/Zrzut%20ekranu%202026-03-4%20o%2008.49.06.png) | ![Dashboard dark](showcase/Zrzut%20ekranu%202026-03-4%20o%2008.48.15.png) |
 
 | Generating | Standup detail | History | Settings |
 |------------|----------------|---------|----------|
-| ![Generating](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.02.34.png) | ![Standup detail](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.02.55.png) | ![History](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.02.18.png) | ![Settings](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.02.24.png) |
+| ![Generating](showcase/Zrzut%20ekranu%202026-03-4%20o%2008.48.34.png) | ![Standup detail](showcase/Zrzut%20ekranu%202026-03-4%20o%2008.48.41.png) | ![History](showcase/Zrzut%20ekranu%202026-03-4%20o%2008.48.22.png) | ![Settings](showcase/Zrzut%20ekranu%202026-03-4%20o%2008.48.26.png) |
 
 ## Running tests
 
