@@ -145,9 +145,13 @@ Swagger UI is available at `http://localhost:3000/api/docs` when the server is r
 
 ## Screenshots
 
-| Landing | Dashboard | Standup |
-|---------|-----------|---------|
-| ![Landing page](docs/screenshots/landing.png) | ![Dashboard — task selection](docs/screenshots/dashboard.png) | ![Generated standup](docs/screenshots/standup.png) |
+| Landing | Dashboard (light) | Dashboard (dark) |
+|---------|-------------------|------------------|
+| ![Landing](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.01.28.png) | ![Dashboard light](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.03.07.png) | ![Dashboard dark](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.02.10.png) |
+
+| Generating | Standup detail | History | Settings |
+|------------|----------------|---------|----------|
+| ![Generating](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.02.34.png) | ![Standup detail](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.02.55.png) | ![History](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.02.18.png) | ![Settings](showcase/Zrzut%20ekranu%202026-03-3%20o%2021.02.24.png) |
 
 ## Running tests
 
