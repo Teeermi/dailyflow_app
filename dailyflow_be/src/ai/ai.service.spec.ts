@@ -68,10 +68,10 @@ describe('AiService', () => {
 
     expect(mockChat).toHaveBeenCalledTimes(1);
     const callArg = mockChat.mock.calls[0][0];
-    expect(callArg.messages[0].content).toContain('Fix login bug');
-    expect(callArg.messages[0].content).toContain('Implement Slack integration');
-    expect(callArg.messages[0].content).toContain('COMPLETED YESTERDAY');
-    expect(callArg.messages[0].content).toContain('ACTIVE TODAY');
+    expect(callArg.messages[1].content).toContain('Fix login bug');
+    expect(callArg.messages[1].content).toContain('Implement Slack integration');
+    expect(callArg.messages[1].content).toContain('COMPLETED YESTERDAY');
+    expect(callArg.messages[1].content).toContain('ACTIVE TODAY');
     expect(result).toContain('**Yesterday**');
   });
 
@@ -92,7 +92,7 @@ describe('AiService', () => {
     };
     const result = await service.generateStandup([], [inProgressTask], '2024-03-02');
 
-    const prompt = mockChat.mock.calls[0][0].messages[0].content;
+    const prompt = mockChat.mock.calls[0][0].messages[1].content;
     expect(prompt).toContain('IN PROGRESS YESTERDAY');
     expect(prompt).toContain('Refactor auth module');
     expect(result).toBeTruthy();
@@ -106,7 +106,7 @@ describe('AiService', () => {
     const tasks = [makeTasks()[0]]; // only completed task
     const result = await service.generateStandup(tasks, [], '2024-03-01');
 
-    expect(mockChat.mock.calls[0][0].messages[0].content).toContain('ACTIVE TODAY:\n(none)');
+    expect(mockChat.mock.calls[0][0].messages[1].content).toContain('ACTIVE TODAY:\n(none)');
     expect(result).toBeTruthy();
   });
 
