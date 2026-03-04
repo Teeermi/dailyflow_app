@@ -78,7 +78,7 @@ sequenceDiagram
 | Notifications | Slack Incoming Webhooks                                  |
 | Infra         | Docker Compose (db + ollama + api + web)                 |
 | Tests         | Vitest + Testing Library (unit), Playwright (e2e)        |
-| CI            | GitHub Actions (lint + test + build + e2e)               |
+| CI            | GitHub Actions (typecheck + test + build + e2e)          |
 
 ## Prerequisites
 
@@ -162,7 +162,7 @@ cd dailyflow_be
 npm test
 ```
 
-20 unit tests covering `AsanaService`, `DailyService`, and `AiService`.
+26 unit tests covering `AsanaService`, `DailyService`, and `AiService`.
 
 ### Frontend unit tests
 
